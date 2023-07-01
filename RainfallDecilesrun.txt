@@ -1,8 +1,3 @@
-ian@ian-Latitude-3190-2-in-1:~/Downloads/alire-1.2.2/alire$ nano rainfalldaciles.py
-ian@ian-Latitude-3190-2-in-1:~/Downloads/alire-1.2.2/alire$ cd
-ian@ian-Latitude-3190-2-in-1:~$ nano rainfalldeciles.py
-ian@ian-Latitude-3190-2-in-1:~$ gedit rainfalldeciles.py
-^C
 ian@ian-Latitude-3190-2-in-1:~$ cat rainfalldeciles.py
 import pandas as pd
 import matplotlib.pyplot as plt
