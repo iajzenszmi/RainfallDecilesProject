@@ -1,0 +1,54 @@
+ian@ian-Latitude-3190-2-in-1:~$ ls rai*
+raindec           rainfall_data.csv                 rainfalldeciles3.f08.save
+raindeccpp        rainfall_dataf.csv                rainfalldeciles.cpp
+raindeccpp.cpp    rainfall_data_fortran.csv         rainfalldecilescpp
+raindec.f         rainfall_data_fortran_sorted.csv  rainfalldeciles.cs
+raindec.f08       rainfall_dataf_sorted.csv         rainfalldeciles.exe
+raindeciles2.cpp  rainfall_datapy_sorted.csv        rainfalldeciles.f
+raindeciles.c     rainfalldeciles                   rainfalldeciles.o
+raindec.o         rainfalldeciles2.f                rainfalldeciles.py
+ian@ian-Latitude-3190-2-in-1:~$ mcs rainfalldeciles.cs
+ian@ian-Latitude-3190-2-in-1:~$ ./rainfalldeciles.exe
+Decile 1: 7.40446517340904
+Decile 2: 15.5994520336203
+Decile 3: 25.8779981600017
+Decile 4: 32.5330330763264
+Decile 5: 45.6069984217036
+Decile 6: 56.1277197569496
+Decile 7: 68.4233026512157
+Decile 8: 77.2244769296657
+Decile 9: 88.7212742576327
+Decile 10: 98.6886936600517
+ian@ian-Latitude-3190-2-in-1:~$ cat rainfalldeciles.cs
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+class Program
+{
+    static void Main()
+    {
+        // Read CSV file
+        string[] lines = File.ReadAllLines("rainfall_data_fortran_sorted.csv");
+
+        // Parse the rainfall data and sort
+        List<double> rainfallData = lines.Select(line => double.Parse(line)).ToList();
+        rainfallData.Sort();
+
+        // Calculate and print deciles
+        for (int i = 1; i <= 10; i++)
+        {
+            double decile = CalculateDecile(rainfallData, i);
+            Console.WriteLine($"Decile {i}: {decile}");
+        }
+    }
+
+    static double CalculateDecile(List<double> data, int decile)
+    {
+        int index = (int)Math.Ceiling((data.Count * decile) / 10.0) - 1;
+        return data[index];
+    }
+}
+
+ian@ian-Latitude-3190-2-in-1:~$ 
