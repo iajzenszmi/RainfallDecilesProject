@@ -1,0 +1,152 @@
+ian@ian-Latitude-3190-2-in-1:~$ ls rai*
+raindec            rainfall_dataf.csv                rainfalldeciles2.f
+raindec.f          rainfall_data_fortran.csv         rainfalldeciles.f
+raindec.f08        rainfall_data_fortran_sorted.csv  rainfalldeciles.o
+raindeciles.c      rainfall_dataf_sorted.csv         rainfalldeciles.py
+raindec.o          rainfall_datapy_sorted.csv
+rainfall_data.csv  rainfalldeciles
+ian@ian-Latitude-3190-2-in-1:~$ cat raindec.f08
+program rainfall_deciles
+    use procedures
+    implicit none
+    integer, parameter :: dp = kind(0.d0)
+    integer, parameter :: MAXN = 10000
+    real(dp), dimension(:), allocatable :: rainfall
+    integer :: i, N, lo1
+    character(len=100) :: line, filename
+    character(len=10) :: field
+    integer :: ios
+    lo1 = 1
+    print *, 'Enter the filename: '
+    read *, filename
+
+    ! Open the file and count the lines
+    open(unit=10, file=filename, status="old", action="read")
+    N = 0
+    do
+        read(10, "(A)", iostat=ios) line
+        if (ios /= 0) exit
+        N = N + 1
+    end do
+    close(10)
+
+    ! Allocate the array
+    allocate(rainfall(N))
+
+    ! Re-open the file and read the data
+    open(unit=10, file=filename, status="old", action="read")
+    do i=1,N
+        read(10, "(A)", iostat=ios) line
+        read(line, *, iostat=ios) rainfall(i)
+        if (ios /= 0) exit
+    end do
+    close(10)
+
+    ! Sort the data
+    call quicksort(rainfall, lo1, N)
+    
+
+    ! Print the deciles
+    do i=1,9
+        print *, "Decile ", i, ": ", rainfall(N*i/10)
+    end do
+
+    deallocate(rainfall)
+end program rainfall_deciles
+
+module procedures
+implicit none
+contains
+
+recursive subroutine quicksort(x, lo, hi) 
+    implicit none
+    integer, parameter :: dp = kind(0.d0)
+    integer, intent(in) :: lo, hi
+    real(dp), dimension(:), intent(inout) :: x
+    integer :: p 
+
+    if (lo < hi) then
+        p = partition(x, lo, hi)
+        call quicksort(x, lo, p-1)
+        call quicksort(x, p+1, hi)
+    end if
+end subroutine quicksort
+
+function partition(x, lo, hi) result(p)
+    implicit none    
+    integer, parameter :: dp = kind(0.d0)   
+    integer, intent(in) :: lo, hi
+    real(dp), dimension(:), intent(inout) :: x
+    integer :: p, i, j
+    real(dp) :: pivot
+
+    pivot = x(hi)
+    p = lo
+    do i=lo,hi-1
+        if (x(i) <= pivot) then
+            call swap(x(p), x(i))
+            p = p + 1
+        end if
+    end do
+    call swap(x(p), x(hi))
+
+    return
+end function partition
+
+subroutine swap(a, b)
+    implicit none    
+    integer, parameter :: dp = kind(0.d0)   
+    real(dp), intent(inout) :: a, b
+    real(dp) :: temp
+    temp = a
+    a = b
+    b = temp
+end subroutine swap
+
+end module
+ian@ian-Latitude-3190-2-in-1:~$ cat rainfalldeciles.py
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read the rainfall data from CSV file
+data = pd.read_csv('rainfall_datapy_sorted.csv')
+
+# Calculate the deciles
+deciles = data['Rainfall'].quantile([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
+
+# Display deciles in text
+print("Deciles of Rainfall:")
+print(deciles)
+
+# Create a bar plot of deciles
+plt.bar(deciles.index, deciles.values)
+plt.xlabel('Decile')
+plt.ylabel('Rainfall')
+plt.title('Deciles of Rainfall')
+plt.show()
+ian@ian-Latitude-3190-2-in-1:~$ gfortran raindec.f08 -o raindec
+ian@ian-Latitude-3190-2-in-1:~$ ./raindec
+ Enter the filename: 
+rainfall_dataf_sorted.csv                                             
+ Decile            1 :    7.4044651734090365     
+ Decile            2 :    15.599452033620265     
+ Decile            3 :    25.877998160001692     
+ Decile            4 :    32.533033076326433     
+ Decile            5 :    45.606998421703594     
+ Decile            6 :    56.127719756949624     
+ Decile            7 :    68.423302651215693     
+ Decile            8 :    77.224476929665741     
+ Decile            9 :    88.721274257632658     
+ian@ian-Latitude-3190-2-in-1:~$ python3 rainfalldeciles.py
+Deciles of Rainfall:
+0.1     7.450004
+0.2    15.601382
+0.3    26.757832
+0.4    32.867095
+0.5    46.414245
+0.6    57.373215
+0.7    69.102032
+0.8    77.282238
+0.9    88.797420
+Name: Rainfall, dtype: float64
+ian@ian-Latitude-3190-2-in-1:~$ 
