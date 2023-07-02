@@ -1,0 +1,88 @@
+ian@ian-Latitude-3190-2-in-1:~$ cat rainfalldeciles.f
+      PROGRAM RainfallDeciles
+      IMPLICIT NONE
+      INTEGER, PARAMETER :: MAXDATA = 1000
+      REAL :: rainfallData(MAXDATA)
+      INTEGER :: i, nData
+
+      OPEN(10, FILE='rainfall_data_fortran_sorted.csv', STATUS='old')
+      i = 1
+      DO
+          READ(10, *, END=100) rainfallData(i)
+          i = i + 1
+      END DO
+
+100   CONTINUE
+      CLOSE(10)
+
+      nData = i - 1
+      CALL CalculateAndWriteDeciles(rainfallData, nData)
+
+      STOP
+      END
+
+      SUBROUTINE CalculateAndWriteDeciles(data, n)
+      IMPLICIT NONE
+      INTEGER, PARAMETER :: MAXDATA = 1000
+      REAL :: data(MAXDATA)
+      INTEGER :: n, i, decile
+      REAL :: decileValues(10)
+
+      DO i = 1, 10
+          decile = n * i / 10
+          decileValues(i) = data(decile)
+      END DO
+
+      OPEN(11, FILE='decilesf.txt', STATUS='unknown')
+      DO i = 1, 10
+          WRITE(11, *) 'Decile', i, ':', decileValues(i)
+      END DO
+      CLOSE(11)
+
+      RETURN
+      END
+ian@ian-Latitude-3190-2-in-1:~$ cat rainfalldeciles.py
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read the rainfall data from CSV file
+data = pd.read_csv('rainfall_data.csv')
+
+# Calculate the deciles
+deciles = data['Rainfall'].quantile([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
+
+# Display deciles in text
+print("Deciles of Rainfall:")
+print(deciles)
+
+# Create a bar plot of deciles
+plt.bar(deciles.index, deciles.values)
+plt.xlabel('Decile')
+plt.ylabel('Rainfall')
+plt.title('Deciles of Rainfall')
+plt.show()
+ian@ian-Latitude-3190-2-in-1:~$ f77 rainfalldeciles.f -o rainfalldeciles
+ian@ian-Latitude-3190-2-in-1:~$ ./rainfalldeciles
+ian@ian-Latitude-3190-2-in-1:~$ cat deciles.txt
+ Decile           1 :   17.0524120    
+ Decile           2 :   25.8779984    
+ Decile           3 :   32.5330315    
+ Decile           4 :   44.0152512    
+ Decile           5 :   52.4756432    
+ Decile           6 :   61.1852913    
+ Decile           7 :   72.9007187    
+ Decile           8 :   78.5175934    
+ Decile           9 :   89.4827347    
+ Decile          10 :   98.6886902    
+ian@ian-Latitude-3190-2-in-1:~$ python3 rainfalldeciles.py
+Deciles of Rainfall:
+0.1     7.450004
+0.2    15.601382
+0.3    26.757832
+0.4    32.867095
+0.5    46.414245
+0.6    57.373215
+0.7    69.102032
+0.8    77.282238
+0.9    88.797420
+Name: Rainfall, dtype: float64
